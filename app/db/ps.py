@@ -30,7 +30,11 @@ def close_db_connection(exception):
 def init_db_command():
     conn = get_db_connection()
     with conn.cursor() as cursor:
-        with current_app.open_resource('path to init') as f:
+        with current_app.open_resource('db/scheme.sql') as f:
             cursor.execute(f.read().decode('utf8'))
     conn.commit()
     click.echo('Initialized the database')
+
+def init_app(app):
+    app.teardown_appcontext(close_db_connection)
+    app.cli.add_command(init_db_command)

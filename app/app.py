@@ -3,9 +3,11 @@ from flask import Flask
 def create_app():
     app = Flask(__name__)
 
-    @app.route('/hello')
-    def hello():
-        return 'Hello works!!!!!!'
+    from .db import ps as ps_dn
+    ps_dn.init_app(app)
+
+    from .views import init_views
+    init_views(app)
 
     return app
 

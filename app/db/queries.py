@@ -1,0 +1,1 @@
+ALL_SURVEYS = """SELECT * FROM surveys ORDER BY id;"""

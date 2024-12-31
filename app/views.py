@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask, request, render_template
 
 from .db.ps import get_db_connection
 from .db.queries import ALL_SURVEYS
@@ -16,9 +16,9 @@ def init_views(app):
             conn = get_db_connection()
             with conn.cursor() as cursor:
                 cursor.execute(ALL_SURVEYS)
-                all_list_surveys = cursor.fetchall()
-                app.logger.info(all_list_surveys)
+                surveys = cursor.fetchall()
+                app.logger.info(surveys)
 
-        return 'All surveys are here'
+        return render_template('all_surveys.html', all_surveys=surveys)
 
     return app

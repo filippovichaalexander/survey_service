@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>All surveys</h2>
+<ul>
+  {% for survey in all_surveys %}
+  <li>
+    {{ loop.index }}. <strong><a href="">{{ survey[1] }}</a></strong><br />{{ survey[2] }}
+  </li>
+  {% endfor %}
+</ul>
+{% endblock %}

@@ -3,6 +3,9 @@ from flask import Flask
 def create_app():
     app = Flask(__name__)
 
+    app.secret_key = 'super secret key'
+    app.config['SESSION_TYPE'] = 'filesystem'
+
     from .db import ps as ps_dn
     ps_dn.init_app(app)
 
@@ -15,7 +18,7 @@ def create_app():
 # flask run
 # flask run --debug
 
-# 1.28.50 - set time
+# 1.53.31 - set time
 
 #
 # @app.route("/")

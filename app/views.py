@@ -5,8 +5,25 @@ from flask import Flask, request, render_template, flash, url_for, session
 from werkzeug.utils import redirect
 
 from .db.ps import get_db_connection
-from .db.queries import ALL_SURVEYS, CREATE_USER, GET_USER_BY_USERNAME_AND_PASSWORD, CREATE_SURVEY, CREATE_OPTION, GET_OPTIONS_FOR_SURVEY
+from .db.queries import (
+    ALL_SURVEYS,
+    CREATE_USER,
+    GET_USER_BY_USERNAME_AND_PASSWORD,
+    CREATE_SURVEY,
+    CREATE_OPTION,
+    GET_OPTIONS_FOR_SURVEY,
+    CHECK_USER_VOTED,
+    CHECK_ANONYMOUS_USER_VOTED,
+    GET_SURVEY,
+    GET_VOTES_FOR_SURVEY,
+    CREATE_VOTE,
+    CREATE_VOTE_OPTIONS,
+    DELETE_SURVEY,
+)
 import logging
+
+from sqlalchemy import func
+
 
 def init_views(app):
     @app.route('/hello')
@@ -60,6 +77,73 @@ def init_views(app):
             options = cursor.fetchall()
 
         return render_template('add_option.html', survey_id=survey_id, options=options)
+
+    @app.route('/survey/<int:survey_id>', methods=['GET'])
+    def get_survey(survey_id):
+        user_id = session.get('id')
+        user_voted = False
+        conn = get_db_connection()
+        with conn.cursor() as cursor:
+            if user_id:
+                cursor.execute(CHECK_USER_VOTED, (survey_id, user_id))
+                user_voted = bool(cursor.fetchone())
+                cursor.execute(CHECK_USER_VOTED, (survey_id, user_id))
+
+            else:
+                # Check for anonymous user by IP address
+                user_ip = request.remote_addr
+                cursor.execute(CHECK_ANONYMOUS_USER_VOTED, (survey_id, user_ip))
+                user_voted = bool(cursor.fetchone())
+
+            cursor.execute(GET_SURVEY, (survey_id,))
+            survey = cursor.fetchone()
+            cursor.execute(GET_OPTIONS_FOR_SURVEY, (survey_id,))
+            options = cursor.fetchall()
+
+        return render_template('survey.html', survey=survey, options=options, is_voted=user_voted)
+
+    @app.route('/survey/<int:survey_id>/votes', methods=['GET'])
+    def get_votes_for_survey(survey_id):
+        conn = get_db_connection()
+        with conn.cursor() as cursor:
+            cursor.execute(GET_VOTES_FOR_SURVEY, (survey_id,))
+            votes = cursor.fetchall()
+            cursor.execute(GET_SURVEY, (survey_id,))
+            survey = cursor.fetchone()
+        return render_template('votes.html', votes=votes, survey=survey)
+
+    @app.route('/submit_vote', methods=['POST'])
+    def submit_vote():
+        survey_id = request.form['survey_id']
+        user_id = session.get('id')  # user_id is optional
+        voter_ip = request.remote_addr
+        option_id = request.form.get('option')
+        option_ids = [option_id] if option_id else request.form.getlist('options')
+
+        if not option_ids:
+            flash('Please select option to vote.')
+            return redirect(url_for('get_survey', survey_id=survey_id))
+
+        conn = get_db_connection()
+        with conn.cursor() as cursor:
+            cursor.execute(CREATE_VOTE, (survey_id, user_id, voter_ip))
+            vote_id = cursor.fetchone()[0]
+            for option_id in option_ids:
+                cursor.execute(CREATE_VOTE_OPTIONS, (vote_id, option_id))
+            conn.commit()
+
+        flash('Vote cast successfully!')
+        return redirect(url_for('get_survey', survey_id=survey_id))
+
+    @app.route('/delete-survey/<int:survey_id>', methods=['POST'])
+    @login_required
+    def delete_survey(survey_id):
+        conn = get_db_connection()
+        with conn.cursor() as cursor:
+            cursor.execute(DELETE_SURVEY, (survey_id,))
+            conn.commit()
+        flash('Survey deleted successfully!')
+        return redirect(url_for('all_surveys'))
 
     @app.route('/')
     def all_surveys():

@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block content %}
 {% for option in options %}
-<li>{{ loop.index }}. {{ option.option_text }}</li>
+<li>{{ loop.index }}. {{ option[1] }}</li>
 {% endfor %}
 
 <h2>Add Option</h2>

@@ -1,0 +1,8 @@
+{% extends 'base.html' %} {% block content %}
+<h2>Votes for Survey: {{ survey.title }}</h2>
+<ul>
+  {% for vote in votes %}
+  <li>{{ vote.option_text }}: {{ vote.vote_count }}</li>
+  {% endfor %}
+</ul>
+{% endblock %}

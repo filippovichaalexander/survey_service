@@ -6,11 +6,17 @@ def create_app():
     app.secret_key = 'super secret key'
     app.config['SESSION_TYPE'] = 'filesystem'
 
-    from .db import ps as ps_dn
-    ps_dn.init_app(app)
+    # from .db import ps as ps_dn
+    # ps_dn.init_app(app)
 
-    from .views import init_views
-    init_views(app)
+    from .db2 import pg as pg_dn
+    pg_dn.init_app(app)
+
+    # from .views import init_views
+    # init_views(app)
+
+    from .views2 import init_app
+    init_app(app)
 
     return app
 

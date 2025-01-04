@@ -1,0 +1,41 @@
+{% extends 'base.html' %} {% block content %}
+<h2>Survey Details</h2>
+<p>Title: {{ survey[1] }}</p>
+<p>Description: {{ survey[2] }}</p>
+<p>Created By: {{ survey[8] }}</p>
+<p>Created At: {{ survey[4].strftime('%Y-%m-%d %H:%M') }}</p>
+<p>Status: {{ 'Active' if survey[5] else 'Not Active' }}</p>
+
+<h2>Options to vote</h2>
+<form method="post" action="/submit_vote">
+  <input type="hidden" name="survey_id" value="{{ survey[0] }}" />
+
+  {% if survey[6] %} {% for option in options %}
+  <div class="radio-group">
+    <input type="radio" name="option" value="{{ option[0] }}" /> {{ option[1]
+    }}<br />
+  </div>
+  {% endfor %} {% else %} {% for option in options %}
+  <div class="checkbox-group">
+    <input type="checkbox" name="options" value="{{ option[0] }}" /> {{
+    option[1] }}
+  </div>
+  <br />
+  {% endfor %} {% endif %} {%if session.id == survey[3]%}
+  <a
+    href="{{ url_for('add_option', survey_id=survey[0]) }}"
+    class="btn btn-primary"
+    >Add Option</a
+  >
+  {%endif%} {%if session.id != survey[3] and not is_voted %}
+  <button type="submit">Submit Vote</button>{%endif%}
+</form>
+
+<br />
+{%if session.id == survey[3] or is_voted %}
+<a
+  href="{{ url_for('get_votes_for_survey', survey_id=survey[0]) }}"
+  class="btn btn-secondary"
+  >View Votes</a
+>
+{%endif%} {% endblock %}

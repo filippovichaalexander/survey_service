@@ -1,0 +1,40 @@
+{% extends 'base.html' %} {% block content %}
+<h2>Survey Details</h2>
+<p>Title: {{ survey.title }}</p>
+<p>Description: {{ survey.description }}</p>
+<p>Created By: {{ survey.user.username }}</p>
+<p>Created At: {{ survey.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+<p>Status: {{ 'Active' if survey.is_active else 'Not Active' }}</p>
+
+<h2>Options to vote</h2>
+<form method="post" action="/submit_vote">
+  <input type="hidden" name="survey_id" value="{{ survey.id }}" />
+
+  {% if survey.is_single_choice %} {% for option in options %}
+  <div class="radio-group">
+    <input type="radio" name="option" value="{{ option.id }}" /> {{ option.option_text }}<br />
+  </div>
+  {% endfor %} {% else %} {% for option in options %}
+  <div class="checkbox-group">
+    <input type="checkbox" name="options" value="{{ option.id }}" /> {{option.option_text}}
+  </div>
+  <br />
+  {% endfor %} {% endif %} {%if session.id == survey.created_by%}
+  <a
+    href="{{ url_for('add_option', survey_id=survey.id) }}"
+    class="btn btn-primary"
+    >Add Option</a
+  >
+  {%endif%} {%if session.id != survey.created_by and not is_voted %}
+  <button type="submit">Submit Vote</button>{%endif%}
+</form>
+<br />
+{% if session.id == survey.created_by or is_voted %}
+<a
+  href="{{ url_for('get_votes_for_survey', survey_id=survey.id) }}"
+  class="btn btn-secondary"
+  >View Votes</a
+>
+{%endif%}
+
+{% endblock %}
